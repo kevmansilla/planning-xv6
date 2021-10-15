@@ -51,7 +51,8 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  unsigned int priority_n;
+  unsigned int priority_n;     // Number of prority of the proccess
+  unsigned int quantum_flag;   // Indicate if the quantum was modified
 };
 
 // Process memory is laid out contiguously, low addresses first:

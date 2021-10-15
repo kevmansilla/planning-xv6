@@ -89,6 +89,7 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->priority_n = 0;
+  p->quantum_flag = 0;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -111,8 +112,6 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
-
-  p->priority_n = 0;
 
   return p;
 }
@@ -338,14 +337,16 @@ scheduler(void)
     // MLFQ Polity:
 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
+      if(p->state == RUNNABLE){
+
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       unsigned int current_priority = p->priority_n;
-      cprintf("N: %s -> P: %d\n",p->name, p->priority_n);
+      unsigned int current_quantum = p->quantum_flag;
+
+      // cprintf("N: %s -> P: %d\n",p->name, p->priority_n);
 
       c->proc = p;
       switchuvm(p);
@@ -353,19 +354,21 @@ scheduler(void)
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
+      c->proc = 0;
+      
       // Si la prioridad no cambio, significa que termino antes del quantum: 
-      if(p->priority_n == current_priority){
+      if(p->priority_n == current_priority && current_quantum == p->quantum_flag){
         if(p->priority_n > 0)
           p->priority_n--;
       }
+  
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
     
-    
+      }
     }
     release(&ptable.lock);
-    c->proc = 0;
 
   }
 }
@@ -404,6 +407,7 @@ yield(void)
   if(myproc()->priority_n < NPRIO-1){
     myproc()->priority_n++;
   }
+  myproc()->quantum_flag = (myproc()->quantum_flag+1)%2;
 
   
   myproc()->state = RUNNABLE;
