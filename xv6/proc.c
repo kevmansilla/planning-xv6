@@ -88,7 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-
+  p->priority_n = 0;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -111,6 +111,8 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+
+  p->priority_n = 0;
 
   return p;
 }
@@ -332,6 +334,9 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+
+    // MLFQ Polity:
+
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
@@ -339,18 +344,28 @@ scheduler(void)
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
+      unsigned int current_priority = p->priority_n;
+      cprintf("N: %s -> P: %d\n",p->name, p->priority_n);
+
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
+      // Si la prioridad no cambio, significa que termino antes del quantum: 
+      if(p->priority_n == current_priority){
+        if(p->priority_n > 0)
+          p->priority_n--;
+      }
+
       // Process is done running for now.
       // It should have changed its p->state before coming back.
-      c->proc = 0;
+    
+    
     }
     release(&ptable.lock);
+    c->proc = 0;
 
   }
 }
@@ -386,6 +401,11 @@ void
 yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
+  if(myproc()->priority_n < NPRIO-1){
+    myproc()->priority_n++;
+  }
+
+  
   myproc()->state = RUNNABLE;
   sched();
   release(&ptable.lock);
@@ -523,7 +543,7 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s", p->pid, state, p->name);
+    cprintf("%d %s %s P: %d", p->pid, state, p->name, p->priority_n);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
