@@ -19,8 +19,10 @@ Se puede observar que aunque el algoritmo RR implementado por el sistema `xv6` n
 
 - ¿Cuánto dura un *quantum* en `xv6`?
 
-En *quantum* de `xv6` tiene una duración de 10ms para cada procesador.
+En *quantum* de `xv6` tiene una duración de 10 ms para cada procesador. Esto se puede ver en el archivo `lapic.c` con el registro `TICR` que luego con la función `lapicw` se emite la interrupción.
 
 - ¿Hay alguna forma de que a un proceso se le asigne menos tiempo?
+
+Una forma de asignarle menos tiempo aun proceso es reduciendo el *quantum* efectando directamente su tiempo de ejecución. Otra forma es aumentando la cantidad de *TICKS* de un proceso determinando.
 
 ## Segunda Parte: Cómo el planificador afecta a los procesos.
