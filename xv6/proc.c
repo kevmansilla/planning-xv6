@@ -14,11 +14,58 @@ struct {
 
 static struct proc *initproc;
 
+// This table is initalized in 0.
+static struct proc *queuetable[NPRIO][NPROC];
+static unsigned int lenqueue[NPRIO] = {0};
+
 int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
+
+// We add the process to the end of the queue: if multiple process have same priority, the scheduler is FIFO.
+static void 
+add_queuetable(unsigned int prio, struct proc *p)
+{
+  queuetable[prio][lenqueue[prio]] = p;
+  lenqueue[prio]++;
+}
+
+// We remove the process of the queue and move all other subsequent process to a more earlier place.
+static void
+rm_queuetable(unsigned int prio, struct proc *p)
+{
+  struct proc *current_proc = queuetable[prio][0];
+  for(unsigned int i = 0; i < NPROC-1; i++)
+  {
+    if(current_proc == p)
+    {
+      queuetable[prio][i] = queuetable[prio][i+1];
+    }
+    else
+    {
+      current_proc = queuetable[prio][i+1];
+    }
+  }
+  lenqueue[prio]--; 
+}
+
+// Print all the running process (this print strange things).
+static void
+print_queuetable(void)
+{
+  cprintf("\n| PRIORITY QUEUE |\n");
+  for (uint i = 0; i < NPRIO; i++)
+  {
+    cprintf("[Q%d|#%d]: ", i, lenqueue[i]);
+    for (uint j = 0; j < lenqueue[i]; j++)
+    {
+      cprintf("%d ", queuetable[i][j]->pid);
+    }
+    cprintf("\n");
+  }
+}
 
 void
 pinit(void)
@@ -89,7 +136,8 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->priority_n = 0;
-  p->quantum_flag = 0;
+  // When a process is created, we add it to the highest priority queue (it places in the first free position).
+  add_queuetable(0, p);
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -262,6 +310,9 @@ exit(void)
     }
   }
 
+  // When a process exited, we remove it of the queue table.
+  rm_queuetable(p->priority_n, p);
+
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();
@@ -327,6 +378,8 @@ scheduler(void)
   struct cpu *c = mycpu();
   c->proc = 0;
   
+  uint priority, c_proc;
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -335,43 +388,45 @@ scheduler(void)
     acquire(&ptable.lock);
 
     // MLFQ Polity:
+    // Search the process with highest priority. 
+    for (priority = 0; priority < NPRIO; priority++)
+    {
+      for (c_proc = 0; c_proc < lenqueue[priority]; c_proc++)
+      {
+        if(queuetable[priority][c_proc] != 0){
+          p = queuetable[priority][c_proc];
+          // If that process is ready, we run it, else we continue with the search.
+          if(p->state != RUNNABLE){
+            continue;
+          }
 
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state == RUNNABLE){
+          // Switch to chosen process.  It is the process's job
+          // to release ptable.lock and then reacquire it
+          // before jumping back to us.
+          c->proc = p;
+          switchuvm(p);
 
+          // Remove the process of the queue because it is running.
+          rm_queuetable(p->priority_n, p);
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      unsigned int current_priority = p->priority_n;
-      unsigned int current_quantum = p->quantum_flag;
+          p->state = RUNNING;
 
-      // cprintf("N: %s -> P: %d\n",p->name, p->priority_n);
+          swtch(&(c->scheduler), p->context);
+          switchkvm();
+          // Process is done running for now.
+          // It should have changed its p->state before coming back.
+          c->proc = 0;
 
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-
-      c->proc = 0;
-      
-      // Si la prioridad no cambio, significa que termino antes del quantum: 
-      if(p->priority_n == current_priority && current_quantum == p->quantum_flag){
-        if(p->priority_n > 0)
-          p->priority_n--;
-      }
-  
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-    
+          // We force the break of the search loop, if there is other process in the same queue, it will run for FIFO.
+          priority = NPRIO;
+          c_proc = NPROC;
+        }
       }
     }
     release(&ptable.lock);
-
   }
 }
+
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
@@ -404,13 +459,15 @@ void
 yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
+  myproc()->state = RUNNABLE;
+  
+  // If while a proceess is running and yield function is called, 
+  // it means the process exceeded the quantum.
+  // so we give it less priority, and add it in its respective queue.
   if(myproc()->priority_n < NPRIO-1){
     myproc()->priority_n++;
   }
-  myproc()->quantum_flag = (myproc()->quantum_flag+1)%2;
-
-  
-  myproc()->state = RUNNABLE;
+  add_queuetable(myproc()->priority_n, myproc());
   sched();
   release(&ptable.lock);
 }
@@ -462,6 +519,14 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   p->chan = chan;
   p->state = SLEEPING;
+
+
+  // If while a process is running and sleep function is called, 
+  // it could means the process not exceeded the quantum.
+  // so we give it more priority, and add it in its respective queue.
+  if(p->priority_n > 0)
+    p->priority_n--;
+  add_queuetable(p->priority_n, p);
 
   sched();
 
@@ -539,7 +604,8 @@ procdump(void)
   struct proc *p;
   char *state;
   uint pc[10];
-
+  
+  cprintf("| PROCESS TABLE | \n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -547,12 +613,13 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s P: %d", p->pid, state, p->name, p->priority_n);
+    cprintf("PID: %d | STATE: %s | NAME: %s | PRIORITY: %d | ", p->pid, state, p->name, p->priority_n);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
-        cprintf(" %p", pc[i]);
+        cprintf("%p", pc[i]);
     }
     cprintf("\n");
   }
+  print_queuetable();
 }
