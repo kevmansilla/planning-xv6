@@ -15,7 +15,7 @@ cpubench_2iobench <- read.table("cpubench_2iobench.txt", quote="\"", comment.cha
 c1 <- filter(cpubench_2iobench, V3 == "KFLOPT")
 c1 <- mean(c1[,2])
 
-i1 <- filter(cpubench_2iobench, V3 == "IOP2500T")
+i1 <- filter(cpubench_2iobench, V3 == "IOP250T")
 i1 <- mean(i1[,2])
 i1 
 
@@ -26,29 +26,29 @@ cpubench2_2iobench <- read.table("2cpubench_2iobench.txt", quote="\"", comment.c
 c3 <- filter(cpubench2_2iobench, V3 == "KFLOPT")
 c3 <- mean(c3[,2])
 
-i3 <- filter(cpubench2_2iobench, V3 == "IOP2500T")
+i3 <- filter(cpubench2_2iobench, V3 == "IOP250T")
 i3 <- mean(i3[,2])
 
 iobench <- read.table("iobench.txt", quote="\"", comment.char="")
-i4 <- filter(iobench, V3 == "IOP2500T")
+i4 <- filter(iobench, V3 == "IOP250T")
 i4 <- mean(i4[,2])
 
 iobench_2cpubench <- read.table("iobench_2cpubench.txt", quote="\"", comment.char="")
 c5 <- filter(iobench_2cpubench, V3 == "KFLOPT")
 c5 <- mean(c5[,2])
 
-i5 <- filter(iobench_2cpubench, V3 == "IOP2500T")
+i5 <- filter(iobench_2cpubench, V3 == "IOP250T")
 i5 <- mean(i5[,2])
 
 iobench_cpubench <- read.table("iobench_cpubench.txt", quote="\"", comment.char="")
 c6 <- filter(iobench_cpubench, V3 == "KFLOPT")
 c6 <- mean(c6[,2])
 
-i6 <- filter(iobench_cpubench, V3 == "IOP2500T")
+i6 <- filter(iobench_cpubench, V3 == "IOP250T")
 i6 <- mean(i6[,2])
 
 iobench2 <- read.table("2iobench.txt", quote="\"", comment.char="")
-i7 <- filter(iobench2, V3 == "IOP2500T")
+i7 <- filter(iobench2, V3 == "IOP250T")
 i7 <- mean(i7[,2])
 
 escenarios <- c("cpubench(c0)", "cpubench_2iobench(c1)","cpubench_2iobench(i1)", "cpubench2(c2)", "cpubench2_2iobench(c3)",
@@ -61,7 +61,7 @@ table
 
 ######### plot y .png #########
 
-png(file = "plot_part2_2_esc1.png")
+png(file = "plot_part4_es0.png")
 bind_rows("cpubench" = cpubench, "cpubench y 2 iobench" = cpubench_2iobench,
           "2 cpubench" = cpubench2, "2 cpubench y 2 iobench" = cpubench2_2iobench,
           "iobench" = iobench, "iobench y 2 cpubench" = iobench_2cpubench,

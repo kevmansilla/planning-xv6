@@ -61,7 +61,7 @@ table
 
 ######### plot y .png #########
 
-png(file = "plot_part2_2_esc1.png")
+png(file = "plot_part4_es1.png")
 bind_rows("cpubench" = cpubench, "cpubench y 2 iobench" = cpubench_2iobench,
           "2 cpubench" = cpubench2, "2 cpubench y 2 iobench" = cpubench2_2iobench,
           "iobench" = iobench, "iobench y 2 cpubench" = iobench_2cpubench,
