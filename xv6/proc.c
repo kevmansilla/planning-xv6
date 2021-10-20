@@ -424,6 +424,8 @@ scheduler(void)
       }
     }
     release(&ptable.lock);
+    sti();
+    hlt();
   }
 }
 
