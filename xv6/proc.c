@@ -389,6 +389,7 @@ scheduler(void)
 
     // MLFQ Polity:
     // Search the process with highest priority. 
+    unsigned int procfound = 0;
     for (priority = 0; priority < NPRIO; priority++)
     {
       for (c_proc = 0; c_proc < lenqueue[priority]; c_proc++)
@@ -408,6 +409,9 @@ scheduler(void)
 
           // Remove the process of the queue because it is running.
           rm_queuetable(p->priority_n, p);
+        
+          // We set this variable to sleep the procesor if necessary.
+          procfound = 1;
 
           p->state = RUNNING;
 
@@ -424,8 +428,10 @@ scheduler(void)
       }
     }
     release(&ptable.lock);
-    sti();
-    hlt();
+    if(procfound == 0){
+      sti();
+      hlt();
+    }
   }
 }
 

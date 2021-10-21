@@ -71,5 +71,5 @@ bind_rows("cpubench" = cpubench, "cpubench y 2 iobench" = cpubench_2iobench,
         geom_bar(width=0.5, fill='lightblue') +
         facet_wrap(~id) +
         theme(panel.grid = element_blank()) +
-        labs(title = "Comparación de escenarios (Parte 2, Ej 1)", y = "Número accesos", x= "Tipo de programa") 
+        labs(title = "Comparación de escenarios (Parte 4, escenario 0)", y = "Número accesos", x= "Tipo de programa") 
 dev.off()
