@@ -54,6 +54,11 @@ trap(struct trapframe *tf)
       wakeup(&ticks);
       release(&tickslock);
     }
+
+    if (ticks % 100 == 0) {
+      priority_boost();
+    }
+
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_IDE:

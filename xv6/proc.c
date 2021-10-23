@@ -7,6 +7,10 @@
 #include "proc.h"
 #include "spinlock.h"
 
+#define TICR (0x0380/4)
+#define QUANTUM 10000000
+
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -16,7 +20,7 @@ static struct proc *initproc;
 
 // This table is initalized in 0.
 static struct proc *queuetable[NPRIO][NPROC];
-static unsigned int lenqueue[NPRIO] = {0};
+static uint lenqueue[NPRIO] = {0};
 
 int nextpid = 1;
 extern void forkret(void);
@@ -26,7 +30,7 @@ static void wakeup1(void *chan);
 
 // We add the process to the end of the queue: if multiple process have same priority, the scheduler is FIFO.
 static void 
-add_queuetable(unsigned int prio, struct proc *p)
+add_queuetable(uint prio, struct proc *p)
 {
   queuetable[prio][lenqueue[prio]] = p;
   lenqueue[prio]++;
@@ -34,10 +38,10 @@ add_queuetable(unsigned int prio, struct proc *p)
 
 // We remove the process of the queue and move all other subsequent process to a more earlier place.
 static void
-rm_queuetable(unsigned int prio, struct proc *p)
+rm_queuetable(uint prio, struct proc *p)
 {
   struct proc *current_proc = queuetable[prio][0];
-  for(unsigned int i = 0; i < NPROC-1; i++)
+  for(uint i = 0; i < NPROC-1; i++)
   {
     if(current_proc == p)
     {
@@ -49,6 +53,26 @@ rm_queuetable(unsigned int prio, struct proc *p)
     }
   }
   lenqueue[prio]--; 
+}
+
+void
+priority_boost(void)
+{
+  struct proc *p;
+  for (uint i = 1; i < NPRIO; i++)
+  {
+    for (uint j = 0; j < NPROC; j++)
+    {
+      p = queuetable[i][j];
+      if(p != 0)
+      {
+        p->priority_n = 0;
+        rm_queuetable(i, p);
+        add_queuetable(0, p);
+      }
+
+    }
+  }
 }
 
 // Print all the running process (this print strange things).
@@ -136,6 +160,7 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->priority_n = 0;
+  p->ticks_proc = 0;
   // When a process is created, we add it to the highest priority queue (it places in the first free position).
   add_queuetable(0, p);
   release(&ptable.lock);
@@ -389,7 +414,7 @@ scheduler(void)
 
     // MLFQ Polity:
     // Search the process with highest priority. 
-    unsigned int procfound = 0;
+    uint procfound = 0;
     for (priority = 0; priority < NPRIO; priority++)
     {
       for (c_proc = 0; c_proc < lenqueue[priority]; c_proc++)
@@ -405,6 +430,7 @@ scheduler(void)
           // to release ptable.lock and then reacquire it
           // before jumping back to us.
           c->proc = p;
+          uint tickinit = ticks;
           switchuvm(p);
 
           // Remove the process of the queue because it is running.
@@ -412,11 +438,18 @@ scheduler(void)
         
           // We set this variable to sleep the procesor if necessary.
           procfound = 1;
-
           p->state = RUNNING;
+
+          if(priority == 0)
+            lapicw(TICR, QUANTUM);
+          else if(priority == 1)
+            lapicw(TICR, QUANTUM*2);
+          else if(priority == 2)
+            lapicw(TICR, QUANTUM*3);
 
           swtch(&(c->scheduler), p->context);
           switchkvm();
+          p->ticks_proc += ticks - tickinit;
           // Process is done running for now.
           // It should have changed its p->state before coming back.
           c->proc = 0;
@@ -429,7 +462,6 @@ scheduler(void)
     }
     release(&ptable.lock);
     if(procfound == 0){
-      sti();
       hlt();
     }
   }
@@ -613,6 +645,9 @@ procdump(void)
   char *state;
   uint pc[10];
   
+  cprintf("Current Quantum: %d\n", lapic[TICR]);
+  cprintf("Current TICKS: %d\n", ticks);
+
   cprintf("| PROCESS TABLE | \n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
@@ -621,7 +656,7 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("PID: %d | STATE: %s | NAME: %s | PRIORITY: %d | ", p->pid, state, p->name, p->priority_n);
+    cprintf("PID: %d | STATE: %s | NAME: %s | PRIORITY: %d | TICKS: %d | ", p->pid, state, p->name, p->priority_n, p->ticks_proc);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
@@ -630,4 +665,7 @@ procdump(void)
     cprintf("\n");
   }
   print_queuetable();
+  cprintf("\n");
+
 }
+
