@@ -35,7 +35,7 @@ Entonces, en el primer caso donde corre un programa `cpubench` podemos ver que e
 
 Por otra parte, cuando corremos solo un proceso `iobench` el promedio de operaciones en aproximadamente 10 veces mayor que si estuviéramos ejecutando un programa `cpubench`.
 
-| Escenario              | Promedio de KFLOPT | Promedio De IOP250T |
+| Caso                   | Promedio de KFLOPT | Promedio De IOP250T |
 |------------------------|--------------------|---------------------|
 | cpubench               |      438.2121      |          -          |
 | cpubench y 2 iobench   |      311.1957      |       119.0815      |
@@ -50,7 +50,7 @@ En la siguiente figura se muestran los accesos de las diferentes situaciones. Se
 
 ![parte2_ej1](xv6/scenarios/parte2_ej1/plot_part2_1.png)
 
-Como conclusión podemos decir que los procesos `iobench` realizan en promedio un número mayor de accesos, que los procesos `cpubench`. Pero estos últimos a pesar de hacer un menor número de accesos realizan más operaciones en promedio si se encuentran corriendo en simultáneo con procesos `iobench`
+Como conclusión podemos decir que los procesos `iobench` realizan en promedio un número mayor de accesos, que los procesos `cpubench`. Pero estos últimos a pesar de hacer un menor número de accesos realizan más operaciones en promedio si se encuentran corriendo en simultáneo con procesos `iobench`. Esto nos permite decir que el *scheduler* da más prioridad a los procesos `cpubench`
 
 ### 2. Para quantums 10, 100 y 1000 veces más cortos.
 
@@ -58,9 +58,9 @@ Para estos escenarios cambiamos el *quantum* por defecto de `xv6` y también los
 
 ### Escenario 1: *quantum* 10 con 2500 *TICKS*
 
-En la siguiente tabla se esbozan los casos con un *quantum* 10 veces más corto, podemos ver que cuando se corren procesos `cpubench` con `2 iobench` a diferencia del punto anterior ahora los programas `iobench` en promedio realizan más operaciones que los `cpubench`, esta relación se mantiene en todos las situaciones. Y cuando corremos solo procesos `cpubench` realizan considerablemente menos operaciones en promedio que el caso anterior, y los programas `iobench` incrementan sustancialmente.
+En la siguiente tabla se esbozan los casos con un *quantum* 10 veces más corto, podemos ver que cuando se corren ` 1 cpubench` con `2 iobench` a diferencia del punto anterior ahora los programas `iobench` en promedio realizan más operaciones que los `cpubench`; esta relación se mantiene en todos las situaciones. Y cuando corremos solo procesos `cpubench` realizan considerablemente menos operaciones en promedio que el caso anterior, y los programas `iobench` incrementan sustancialmente.
 
-| Escenario              | Promedio de KFLOPT | Promedio De IOP250T |
+| Caso                   | Promedio de KFLOPT | Promedio De IOP250T |
 |------------------------|--------------------|---------------------|
 | cpubench               |      39.10345      |          -          |
 | cpubench y 2 iobench   |      19.85185      |       647.65534     |
@@ -77,10 +77,10 @@ Los accesos los presentamos en la siguiente figura, donde los procesos `iobench`
 
 ### Escenario 2: *quantum* 100 con 2500 *TICKS*
 
-Ahora con un *quantum* 100 veces menor, en la tabla observamos que los procesos `cpubench` no realizan operaciones en ninguno de los escenarios. Por otra parte los procesos `iobench` si realizan pero en promedio mucho menores en relación a la situación anterior (*quantum* 10 veces menor).
+Ahora con un *quantum* 100 veces menor, en la tabla observamos que los procesos `cpubench` no realizan operaciones en ninguno de los casos. Por otra parte los procesos `iobench` si realizan, pero en promedio mucho menores en relación a la situación anterior (*quantum* 10 veces menor).
 
 
-| Escenario              | Promedio de KFLOPT | Promedio De IOP250T |
+| Caso                   | Promedio de KFLOPT | Promedio De IOP250T |
 |------------------------|--------------------|---------------------|
 | cpubench               |      1.00000       |          -          |
 | cpubench y 2 iobench   |      0.00000       |       60.06281      |
@@ -97,9 +97,9 @@ En la siguiente figura donde se presentan los accesos de los programas, notamos 
 
 ### Escenario 3: *quantum* 1000 con 2500 *TICKS*
 
-Por último, con un *quantum* 1000 menor observamos que los procesos `cpubench` no realizan ninguna operación en ninguno de los escenarios (NaN), y los `iobench` reducen drásticamente.
+Por último, con un *quantum* 1000 menor observamos que los procesos `cpubench` no realizan ninguna operación en ninguno de los escenarios (NaN), y los `iobench` reducen drásticamente en comparación a los escenarios presentados anteriormente.
 
-| Escenario              | Promedio de KFLOPT | Promedio De IOP250T |
+| Caso                   | Promedio de KFLOPT | Promedio De IOP250T |
 |------------------------|--------------------|---------------------|
 | cpubench y 2 iobench   |       NaN          |      15.081967      |
 | 2 cpubench y 2 iobench |       NaN          |       5.600000      |
@@ -109,7 +109,7 @@ Por último, con un *quantum* 1000 menor observamos que los procesos `cpubench` 
 | 2 iobench              |          -         |       13.321101     |
 
 
-En la siguiente figura, podemos ver que los `cpubench` no realizan accesos comprobando los resultados de la tabla, y los `iobench` tienen accesos pero por la reducción del *quamtum* las operaciones caen. Esto nos dice que al reducir cada vez más el *quantum* del *scheduler* ambos procesos reducen cada vez más el número de operaciones promedio, hasta llegar a casos límites donde no realizan ninguna.
+En la siguiente figura, podemos ver que los `cpubench` no realizan accesos comprobando los resultados de la tabla, y los `iobench` tienen accesos pero por la reducción del *quamtum* las operaciones caen. Esto nos dice que al reducir cada vez más el *quantum* del *scheduler* ambos procesos reducen cada vez más el número de operaciones promedio, hasta llegar a casos límites donde no realizan ninguna. En el caso de los `cpubench` como son intensivos en uso del procesador y el *quamtum* es tan corto, en el tiempo que les toca no alcanzan a hacer uso. 
 
 ![parte2_ej2_2_es3](xv6/scenarios/parte2_ej2/scenario3/plot_part2_2_esc3.png)
 
@@ -117,30 +117,35 @@ En la siguiente figura, podemos ver que los `cpubench` no realizan accesos compr
 
 ### MLFQ regla 3: Cuando un proceso se inicia, su prioridad será máxima.
 Para la implementación de este comportamiento modificamos la estructura que contiene cada proceso, `struct proc`, agregando un campo `priority_n`. Este campo nos dice cual es la prioridad de un proceso.
-Luego modificamos la función `allocproc` que se encuentra en `proc.c`. Esta función se llama cuando se crea un nuevo proceso. Cuando un proceso se inicia, su prioridad debe ser la mas alta, entonces dentro de `allocproc` incializamos el campo `priority_n` con 0 (prioridad mas alta).
+
+Luego modificamos la función `allocproc` que se encuentra en `proc.c`. Esta función se llama cuando se crea un nuevo proceso. Cuando un proceso se inicia, su prioridad debe ser la más alta, entonces dentro de `allocproc` inicializamos el campo `priority_n` con 0 (prioridad más alta).
 
 ### MLFQ regla 4: Descender de prioridad cada vez que el proceso pasa todo un quantum realizando cómputo.
-En una politica de planificación como MLFQ, cuando un proceso excede todo un *quantum*, su prioridad se reduce. A su vez, en `xv6` un proceso puede abandonar la CPU forzadamente por medio de un *timmer-interrupt*, llamando a la función `yield`.
-Utilizando este *timmer* como *quantum*, si durante la ejecución de un proceso se llama a `yield`, significa que el proceso excedio su *quantum*, por ende modificamos dicha función, para reducir la prioridad del proceso.
+En una política de planificación como MLFQ, cuando un proceso excede todo un *quantum*, su prioridad se reduce. A su vez, en `xv6` un proceso puede abandonar la CPU forzadamente por medio de un *timmer-interrupt*, llamando a la función `yield`.
+
+Utilizando este *timmer* como *quantum*, si durante la ejecución de un proceso se llama a `yield`, significa que el proceso excedió su *quantum*, por ende modificamos dicha función, para reducir la prioridad del proceso.
 
 ### Ascender de prioridad cada vez que el proceso bloquea antes de terminar su quantum.
-Del mismo modo que la regla 3, cuando un proceso finaliza antes de que termine su *quantum*, se llama a la fución `sleep`. Por ende modificamos dicha función para que aumente la prioridad del proceso.
 
-Estos comportamientos se ven reflejados en las funciones `iobench` y `cpubench`. 
-La función `iobench` realiza varias solicitudes de I/O por lo que no hace uso intensivo de la CPU, abandonando el control de la CPU antes que finalice su *qauntum*. Este comportamiento es premiado por el planificador MLFQ aumentando la prioridad del proceso.
-En cambio `cpubench` si realiza un uso intensivo de la CPU, generalmente excediendo su *quantum*, por lo que MLFQ lo castiga reduciendole su prioridad.
+Del mismo modo que la regla 3, cuando un proceso finaliza antes de que termine su *quantum*, se llama a la función `sleep`. Por ende modificamos dicha función para que aumente la prioridad del proceso.
 
+Estos comportamientos se ven reflejados en las funciones `iobench` y `cpubench`. La función `iobench` realiza varias solicitudes de I/O por lo que no hace uso intensivo de la CPU, abandonando el control de la CPU antes que finalice su *quantum*. Este comportamiento es premiado por el planificador MLFQ aumentando la prioridad del proceso.
+
+En cambio `cpubench` si realiza un uso intensivo de la CPU, generalmente excediendo su *quantum*, por lo que MLFQ lo castiga reduciéndole su prioridad.
 
 ## Cuarta Parte: Implementando MLFQ.
 
-Para una sencilla implementación de MLFQ, utilizamos un arreglo bidimensional donde se representan las colas de prioridad. Para optimiza la busquedas de proceso en dichas colas, definimos otros arreglo unidimensional donde el indice el mismo representa la cola de prioridad, y su elemento nos representa la cantidad de procesos que tienen dicha cola en tal prioridad.
-Cuando un proceso inicia, su prioridad es maxima, entonces lo agregamos al primer lugar disponible de la Q0 (cola con mas prioridad). Luego si un proceso aumenta o reduce su prioridad, se lo añade a su nueva cola respectiva.
+Para una sencilla implementación de MLFQ, utilizamos un arreglo bidimensional donde se representan las colas de prioridad. Para optimizar la búsquedas de proceso en dichas colas, definimos otros arreglo unidimensional donde el indice el mismo representa la cola de prioridad, y su elemento nos representa la cantidad de procesos que tienen dicha cola en tal prioridad.
+
+Cuando un proceso inicia, su prioridad es máxima, entonces lo agregamos al primer lugar disponible de la Q0 (cola con más prioridad). Luego si un proceso aumenta o reduce su prioridad, se lo añade a su nueva cola respectiva.
 
 ### MLFQ regla 1: Si el proceso A tiene mayor prioridad que el proceso B, corre A. (y no B).
-En la función `scheduler` quien es el encargado de planificar los procesos, buscamos el proceso con mayor prioridad y lo ejecutamos. A su vez eliminamos dicho proceso de la cola. Para ejecutar el proximo proceso, volvemos a buscar el proceso que tenga mayor prioridad.
+
+En la función `scheduler` quien es el encargado de planificar los procesos, buscamos el proceso con mayor prioridad y lo ejecutamos. A su vez eliminamos dicho proceso de la cola. Para ejecutar el práximo proceso, volvemos a buscar el proceso que tenga mayor prioridad.
 
 ### MLFQ regla 2: Si dos procesos A y B tienen la misma prioridad, corren en round-robin por el quantum determinado.
-Como mencionamos en la regla anterior, el proceso que se ejecuta es el de maxima prioridad. Pero si dos procesos tienen la misma prioridad se corren con *round-robin*. Esto lo obtenemos buscando el primer proceso con mayor prioridad, quitandolo de la cola y en caso que se quiere continuar con su ejecucción, lo agregamos al fondo de su respectiva cola. De esta forma logramos un *Round-Robin*, ya que los procesos con misma prioridad se van a ir turnando para su ejecucción.
+
+Como mencionamos en la regla anterior, el proceso que se ejecuta es el de máxima prioridad. Pero si dos procesos tienen la misma prioridad se corren con *Round-Robin*. Esto lo obtenemos buscando el primer proceso con mayor prioridad, eliminándolo de la cola y en caso que se quiere continuar con su ejecución, lo agregamos al fondo de su respectiva cola. De esta forma logramos un *Round-Robin*, ya que los procesos con misma prioridad se van a ir turnando para su ejecución.
 
 En el caso que no haya procesos RUNNABLE en la cola de procesos, mandamos al procesador a dormir utilizando la función `hlt()`.
 
@@ -148,9 +153,9 @@ En el caso que no haya procesos RUNNABLE en la cola de procesos, mandamos al pro
 
 ### Escenario 0: *quantum* por defecto con 250 *TICKS*
 
-Con la implementación de MLFQ, en la siguiente tabla podemos ver el número de operaciones promedio de cada escenario. A simple vista podemos decir que los procesos `cpubench` realizan en promedio menos operaciones que los `iobench` en todos los casos, pero en relación al escenario 0 con un planificador RR, el número de operaciones es más parejo en los procesos.
+Con la implementación de MLFQ, en la siguiente tabla podemos ver el número de operaciones promedio de cada situación. A simple vista podemos decir que los procesos `cpubench` realizan en promedio menos operaciones que los `iobench` en todos los casos, pero en relación al caso 0 con un planificador RR, el número de operaciones es más parejo en los procesos.
 
-| Escenario              | Promedio de KFLOPT | Promedio De IOP250T |
+| Caso                   | Promedio de KFLOPT | Promedio De IOP250T |
 |------------------------|--------------------|---------------------|
 | cpubench               |     457.1143       |          -          |
 | cpubench y 2 iobench   |     262.6842       |       432.9200      |
@@ -161,7 +166,7 @@ Con la implementación de MLFQ, en la siguiente tabla podemos ver el número de 
 | cpubench y iobench     |      283.6341      |        277.4412     |
 | 2 iobench              |          -         |      2993.3974      |
 
-Por otra parte el número de accesos se comporta se manera similar al RR, gracias a esto podemos decir que MLFQ aumenta el número de operaciones de los procesos `cpubench`.
+Por otra parte el número de accesos se comporta se manera similar al RR, gracias a esto podemos decir que MLFQ aumenta el número de operaciones de los procesos `iobench`.
 
 ![parte4_es0](xv6/scenarios/parte4_mlfq/scenario0/plot_part4_es0.png)
 
@@ -169,16 +174,16 @@ Por otra parte el número de accesos se comporta se manera similar al RR, gracia
 
 En este escenario con un *quantum* 10 veces menor y 2500 *TICS* en cada proceso, podemos ver que el número de operaciones promedio de los procesos `cpubench` es considerablemente menor en todos los casos y más aún cuando se ejecuta en simultáneo con procesos `iobench`.
 
-| Escenario              | Promedio de KFLOPT | Promedio De IOP250T |
+| Caso                   | Promedio de KFLOPT | Promedio De IOP250T |
 |------------------------|--------------------|---------------------|
-| cpubench               |      38.750000     |          -          |
-| cpubench y 2 iobench   |      6.111111      |       1757.943396   |
-| 2 cpubench             |      20.888889     |          -          |
-| 2 cpubench y 2 iobench |      4.000000      |     1566.180952     |
-| iobench                |          -         |      3102.800000    |
-| 2 cpubench y iobench   |      5.142857      |      1734.355769    |
-| cpubench y iobench     |      9.615385      |      1974.893204    |
-| 2 iobench              |          -         |      2262.763889    |
+| cpubench               |      38.7500       |          -          |
+| cpubench y 2 iobench   |      6.1111        |      1757.9433      |
+| 2 cpubench             |      20.8888       |          -          |
+| 2 cpubench y 2 iobench |      4.0000        |      1566.1809      |
+| iobench                |          -         |      3102.8000      |
+| 2 cpubench y iobench   |      5.1428        |      1734.3557      |
+| cpubench y iobench     |      9.6153        |      1974.8932      |
+| 2 iobench              |          -         |      2262.7638      |
 
 A su vez, en relación al escenario 1 con un planificados RR las operaciones promedio de los `cpubench` se reducen aún más, pero con un número de accesos bastante similar.
 
@@ -187,16 +192,16 @@ A su vez, en relación al escenario 1 con un planificados RR las operaciones pro
 
 Ahora analizamos la siguiente tabla se observa que el *scheduler* le da cada vez menos importancia a los procesos `cpubench` en relación con los `iobench`, hasta llegar al punto que los primeros no realizan operaciones.  
 
-| Escenario              | Promedio de KFLOPT | Promedio De IOP250T |
+| Caso                   | Promedio de KFLOPT | Promedio De IOP250T |
 |------------------------|--------------------|---------------------|
-| cpubench               |      1.00000       |          -          |
-| cpubench y 2 iobench   |         NaN        |       41.30065      |
-| 2 cpubench             |      0.00000       |          -          |
-| 2 cpubench y 2 iobench |      0.00000       |       28.76487      |
-| iobench                |          -         |      74.99259       |
-| 2 cpubench y iobench   |      0.00000       |       29.87402      |
-| cpubench y iobench     |      0.00000       |      42.58048       |
-| 2 iobench              |          -         |      67.28016       |
+| cpubench               |      1.000         |          -          |
+| cpubench y 2 iobench   |         NaN        |       41.3006       |
+| 2 cpubench             |      0.000         |          -          |
+| 2 cpubench y 2 iobench |      0.000         |       28.7648       |
+| iobench                |          -         |      74.9925        |
+| 2 cpubench y iobench   |      0.000         |       29.8740       |
+| cpubench y iobench     |      0.000         |      42.5804        |
+| 2 iobench              |          -         |      67.2801        |
 
 En la figura podemos ver que los programas `cpubench` realizan accesos, pero no computan operaciones. 
 
@@ -207,14 +212,14 @@ En la figura podemos ver que los programas `cpubench` realizan accesos, pero no 
 Por último, con un *quantum* 100 veces menor notamos que los procesos `cpubench` no realizan operaciones en promedio en ninguno de los casos.
 Y las operaciones de los `iobench` son en promedio menores a la del escenario anterior.
 
-| Escenario              | Promedio de KFLOPT | Promedio De IOP250T |
+| Caso                   | Promedio de KFLOPT | Promedio De IOP250T |
 |------------------------|--------------------|---------------------|
-| cpubench y 2 iobench   |       NaN          |      27.46456693    |
-| 2 cpubench y 2 iobench |       NaN          |       0.05263158    |
-| iobench                |          -         |      47.35365854    |
-| 2 cpubench y iobench   |       0.00000000   |       20.06451613   |
-| cpubench y iobench     |       0.00000000   |      26.63235294    |
-| 2 iobench              |          -         |       28.23809524   |
+| cpubench y 2 iobench   |       NaN          |      27.4645        |
+| 2 cpubench y 2 iobench |       NaN          |       0.0526        |
+| iobench                |          -         |      47.3536        |
+| 2 cpubench y iobench   |       0.0000       |       20.0645       |
+| cpubench y iobench     |       0.0000       |      26.6323        |
+| 2 iobench              |          -         |       28.2380       |
 
 Notamos que en los casos que se corren solo procesos `cpubench` no generan accesos ni operaciones (por eso no se encuentran presentes). 
 
